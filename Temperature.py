@@ -1,3 +1,4 @@
+#Wyatt was here
 class Temperature:
     def __init__(self, value, time):
         self.value = value
