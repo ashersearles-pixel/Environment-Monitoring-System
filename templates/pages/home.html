@@ -17,6 +17,14 @@
   </h3>
   <p>Last read: <span id="temperature-time">--</span></p>
 
+  <h3>
+  Air Quality Index: <span id="air-quality">--</span>
+  </h3>
+  <p>Last read: <span id="air-quality-time">--</span></p>
+  <p>Raw gas value: <span id="air-quality-raw">--</span></p>
+  <p>Compensation: <span id="air-quality-temp">--</span> °C, <span id="air-quality-humidity">--</span> %</p>
+  <p>Status: <span id="air-quality-status">--</span></p>
+
   <script>
     function fetchTemperature() {
         fetch('/api/temperature')
@@ -32,10 +40,34 @@
             });
     }
 
-    // Fetch temperature every 5 seconds
+    function fetchAirQuality() {
+        fetch('/api/air-quality')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('air-quality').textContent = data.iaq;
+                document.getElementById('air-quality-raw').textContent = data.raw;
+                document.getElementById('air-quality-temp').textContent = data.temperature;
+                document.getElementById('air-quality-humidity').textContent = data.humidity;
+                document.getElementById('air-quality-status').textContent = data.warming ? 'Warming up' : 'Stable';
+                document.getElementById('air-quality-time').textContent = data.timestamp || 'unknown';
+            })
+            .catch(error => {
+                console.error('Error fetching air quality:', error);
+                document.getElementById('air-quality').textContent = 'Error';
+                document.getElementById('air-quality-raw').textContent = '--';
+                document.getElementById('air-quality-temp').textContent = '--';
+                document.getElementById('air-quality-humidity').textContent = '--';
+                document.getElementById('air-quality-status').textContent = '--';
+                document.getElementById('air-quality-time').textContent = '--';
+            });
+    }
+
+    // Fetch temperature and air quality every 5 seconds
     setInterval(fetchTemperature, 5000);
+    setInterval(fetchAirQuality, 5000);
     // Initial fetch
     fetchTemperature();
+    fetchAirQuality();
   </script>
   
 

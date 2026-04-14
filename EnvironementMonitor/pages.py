@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, jsonify
 from TemperatureDB import TemperatureDB
 from temp_reading import read_temperature, Temperature
 from humidity_reading import read_humidity
+from air_quality_reading import read_air_quality
 from HumidityDB import HumidityDB
 import matplotlib.dates as mdates
 from datetime import datetime
@@ -44,9 +45,18 @@ def get_humidity():
         "unit": "%"
     })
 
+
+@bp.route('/api/air-quality', methods=['GET'])
+def get_air_quality():
+    air_quality = read_air_quality()
     return jsonify({
-        "temperature": temperature.get_value(),
-        "unit": "°C"
+        "iaq": air_quality.get_iaq(),
+        "raw": air_quality.get_raw(),
+        "temperature": air_quality.get_temperature(),
+        "humidity": air_quality.get_humidity(),
+        "timestamp": air_quality.get_timestamp(),
+        "warming": air_quality.is_warming_up(),
+        "unit": "IAQ"
     })
 
 
