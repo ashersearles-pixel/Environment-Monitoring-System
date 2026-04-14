@@ -25,7 +25,7 @@ class TemperatureDB:
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.cursor.execute(
             "INSERT INTO temperature_log (temperature, timestamp) VALUES (?, ?)",
-            (temp.value, temp.timestamp)
+            (temp.get_temperature(), temp.get_timestamp())
         )
         self.conn.commit()
 

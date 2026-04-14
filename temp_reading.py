@@ -1,20 +1,26 @@
 
-# import smbus2 as smbus
 import time
+from types import SimpleNamespace
 
 from datetime import datetime
 
-from Temperature import Temperature
+try:
+    from .Temperature import Temperature
+except ImportError:
+    from Temperature import Temperature
 
 try:
-    import smbus # type: ignore
+    import smbus2 as smbus
 except ImportError:
-    class SMBus:
-        def __init__(self, bus): pass
-        def read_byte_data(self, addr, reg): return 0
-        def write_byte_data(self, addr, reg, value): pass
+    try:
+        import smbus # type: ignore
+    except ImportError:
+        class SMBus:
+            def __init__(self, bus): pass
+            def read_byte_data(self, addr, reg): return 0
+            def write_byte_data(self, addr, reg, value): pass
 
-    smbus = type('smbus', (), {'SMBus': SMBus})
+        smbus = SimpleNamespace(SMBus=SMBus)
 
 HTS221_ADDRESS = 0x5F
 CTRL_REG1 = 0x20
@@ -37,9 +43,20 @@ def read_register(reg):
 def write_register(reg, value):
     bus.write_byte_data(HTS221_ADDRESS, reg, value)
 
+def read_signed_16(low_reg, high_reg):
+    value = read_register(low_reg) | (read_register(high_reg) << 8)
+    if value > 32767:
+        value -= 65536
+    return value
+
+
+def init_sensor():
+    write_register(CTRL_REG1, 0x85)
+
+
 def read_temperature():
     # Enable the sensor
-    write_register(CTRL_REG1, 0x80)
+    init_sensor()
 
     # Read calibration data
     T0_degC = read_register(T0_DEGC_X8)
@@ -53,29 +70,24 @@ def read_temperature():
     T1_degC /= 8.0
 
     # Read temperature raw data
-    T0_out = read_register(T0_OUT_L) | (read_register(T0_OUT_H) << 8)
-    T1_out = read_register(T1_OUT_L) | (read_register(T1_OUT_H) << 8)
-    
-    Temp_out = read_register(TEMP_OUT_L) | (read_register(TEMP_OUT_H) << 8)
-    if Temp_out > 32767:
-        Temp_out -= 65536  # Convert to signed
+    T0_out = read_signed_16(T0_OUT_L, T0_OUT_H)
+    T1_out = read_signed_16(T1_OUT_L, T1_OUT_H)
+    temp_out = read_signed_16(TEMP_OUT_L, TEMP_OUT_H)
 
     # Convert raw value to temperature
-    # temperature = T0_degC + (Temp_out - T0_out) * (T1_degC - T0_degC) / (T1_out - T0_out)
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     if (T1_out - T0_out) == 0:
         temperature = Temperature(0, timestamp)
-        return temperature  # or None or default value
+        return temperature
 
-    temperature = T0_degC + (Temp_out - T0_out) * (T1_degC - T0_degC) / (T1_out - T0_out)
-    temperature = round(temperature, 2)
-    temperature = Temperature(temperature, timestamp)
-    return round(temperature, 2)
+    temperature_value = T0_degC + (temp_out - T0_out) * (T1_degC - T0_degC) / (T1_out - T0_out)
+    temperature_value = round(temperature_value, 2)
+    return Temperature(temperature_value, timestamp)
 
 # Test the sensor
-# if __name__ == "__main__":
-#     while True:
-#         temp = read_temperature()
-#         insert_temperature(temp)
-#         print(f"Temperature: {temp}°C")
-#         time.sleep(1)
+if __name__ == "__main__":
+    while True:
+        temp = read_temperature()
+        # insert_temperature(temp)
+        print(f"Temperature: {temp.get_value()}°C")
+        time.sleep(1)

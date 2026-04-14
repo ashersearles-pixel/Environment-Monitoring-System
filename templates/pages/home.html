@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h2>{% block title %}Home{% endblock title %}</h2>
+  
+{% endblock header %}
+
+{% block content %}
+  <p>
+    Learn more about this project by visiting the <a href="{{ url_for('pages.about') }}">About page</a>.
+  </p>
+
+
+  <hr>
+  <h3>
+  Temperature: <span id="temperature">--</span> °C
+  </h3>
+  <p>Last read: <span id="temperature-time">--</span></p>
+
+  <script>
+    function fetchTemperature() {
+        fetch('/api/temperature')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('temperature').textContent = data.temperature;
+                document.getElementById('temperature-time').textContent = data.timestamp || 'unknown';
+            })
+            .catch(error => {
+                console.error('Error fetching temperature:', error);
+                document.getElementById('temperature').textContent = 'Error';
+                document.getElementById('temperature-time').textContent = '--';
+            });
+    }
+
+    // Fetch temperature every 5 seconds
+    setInterval(fetchTemperature, 5000);
+    // Initial fetch
+    fetchTemperature();
+  </script>
+  
+
+  <hr>
+  <h4>Get Temperature Graph by Date</h4>
+
+  <label for="dateInput">Select Date:</label>
+  <input type="date" id="dateInput" style="padding: 8px; font-size: 16px; margin-top: 5px;">
+
+  <button onclick="fetchTemperatureGraph()">Get Graph</button>
+
+  <br><br>
+
+  <img id="graphImage" 
+       alt="Temperature Graph will appear here" 
+       style="max-width: 600px; display: none; border: 1px solid #ccc; padding: 10px;">
+
+  <script>
+    function fetchTemperatureGraph() {
+        const dateValue = document.getElementById("dateInput").value;
+
+        if (!dateValue) {
+            alert("Please select a date");
+            return;
+        }
+
+        const timestamp = Math.floor(new Date(dateValue + "T00:00:00").getTime() / 1000
+        );
+        console.log('The timestamp %s is ', timestamp);
+
+        fetch(`/temperature-by-date?timestamp=${timestamp}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.graph) {
+                    const img = document.getElementById("graphImage");
+                    img.src = "data:image/png;base64," + data.graph;
+                    img.style.display = "block";
+                } else {
+                    alert(data.message || "No data found");
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("Failed to fetch data");
+            });
+    }
+  </script>
+{% endblock content %}
