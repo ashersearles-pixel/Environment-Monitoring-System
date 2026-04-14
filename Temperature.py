@@ -12,3 +12,5 @@ class Temperature:
     
     def get_timestamp(self):
         return self.timestamp
+
+        #sup 
