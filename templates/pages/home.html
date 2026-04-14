@@ -2,262 +2,228 @@
 
 {% block header %}
   <h2>{% block title %}Home{% endblock title %}</h2>
-  
+  <p class="small-note">Live sensor readings and daily graph access for your environment monitor.</p>
 {% endblock header %}
 
 {% block content %}
-  <p>
-    Learn more about this project by visiting the <a href="{{ url_for('pages.about') }}">About page</a>.
-  </p>
+  <div class="card-grid">
+    <article class="status-card">
+      <h3>Temperature</h3>
+      <p><strong><span id="temperature">--</span> °C</strong></p>
+      <p>Last read: <span id="temperature-time">--</span></p>
+    </article>
 
+    <article class="status-card">
+      <h3>Humidity</h3>
+      <p><strong><span id="humidity">--</span> %</strong></p>
+      <p>Last read: <span id="humidity-time">--</span></p>
+    </article>
 
-  <hr>
-  <h3>
-  Temperature: <span id="temperature">--</span> °C
-  </h3>
-  <p>Last read: <span id="temperature-time">--</span></p>
+    <article class="status-card">
+      <h3>Air Quality Index</h3>
+      <p><strong><span id="air-quality">--</span></strong></p>
+      <p>Last read: <span id="air-quality-time">--</span></p>
+      <p>Raw gas: <span id="air-quality-raw">--</span></p>
+      <p>Humidity comp: <span id="air-quality-humidity">--</span> %</p>
+      <p>Temp comp: <span id="air-quality-temp">--</span> °C</p>
+      <p>Status: <span id="air-quality-status">--</span></p>
+    </article>
+  </div>
 
-  <h3>
-  Humidity: <span id="humidity">--</span> %
-  </h3>
-  <p>Last read: <span id="humidity-time">--</span></p>
+  <section class="form-block">
+    <header>
+      <h3 class="section-title">Daily graphs</h3>
+    </header>
 
-  <h3>
-  Air Quality Index: <span id="air-quality">--</span>
-  </h3>
-  <p>Last read: <span id="air-quality-time">--</span></p>
-  <p>Raw gas value: <span id="air-quality-raw">--</span></p>
-  <p>Humidity used for compensation: <span id="air-quality-humidity">--</span> %</p>
-  <p>Temperature used for compensation: <span id="air-quality-temp">--</span> °C</p>
-  <p>Status: <span id="air-quality-status">--</span></p>
+    <article class="status-card">
+      <div class="form-row">
+        <label for="dateInput">Temperature</label>
+        <input type="date" id="dateInput">
+        <button class="button" onclick="fetchTemperatureGraph()">View</button>
+      </div>
+      <img id="tempGraphImage" alt="Temperature Graph" class="graph-image" style="display:none;">
+    </article>
+
+    <article class="status-card">
+      <div class="form-row">
+        <label for="airQualityDateInput">Air Quality</label>
+        <input type="date" id="airQualityDateInput">
+        <button class="button" onclick="fetchAirQualityGraph()">View</button>
+      </div>
+      <img id="airQualityGraphImage" alt="Air Quality Graph" class="graph-image" style="display:none;">
+    </article>
+
+    <article class="status-card">
+      <div class="form-row">
+        <label for="gasValueDateInput">Raw Gas</label>
+        <input type="date" id="gasValueDateInput">
+        <button class="button" onclick="fetchGasValueGraph()">View</button>
+      </div>
+      <img id="gasValueGraphImage" alt="Gas Value Graph" class="graph-image" style="display:none;">
+    </article>
+
+    <article class="status-card">
+      <div class="form-row">
+        <label for="humidityDateInput">Humidity</label>
+        <input type="date" id="humidityDateInput">
+        <button class="button" onclick="fetchHumidityGraph()">View</button>
+      </div>
+      <img id="humidityGraphImage" alt="Humidity Graph" class="graph-image" style="display:none;">
+    </article>
+  </section>
 
   <script>
     function fetchTemperature() {
-        fetch('/api/temperature')
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('temperature').textContent = data.temperature;
-                document.getElementById('temperature-time').textContent = data.timestamp || 'unknown';
-            })
-            .catch(error => {
-                console.error('Error fetching temperature:', error);
-                document.getElementById('temperature').textContent = 'Error';
-                document.getElementById('temperature-time').textContent = '--';
-            });
+      fetch('/api/temperature')
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById('temperature').textContent = data.temperature;
+          document.getElementById('temperature-time').textContent = data.timestamp || 'unknown';
+        })
+        .catch(error => {
+          console.error('Error fetching temperature:', error);
+          document.getElementById('temperature').textContent = 'Error';
+          document.getElementById('temperature-time').textContent = '--';
+        });
     }
 
     function fetchHumidity() {
-        fetch('/api/humidity')
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('humidity').textContent = data.humidity;
-                document.getElementById('humidity-time').textContent = data.timestamp || 'unknown';
-            })
-            .catch(error => {
-                console.error('Error fetching humidity:', error);
-                document.getElementById('humidity').textContent = 'Error';
-                document.getElementById('humidity-time').textContent = '--';
-            });
+      fetch('/api/humidity')
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById('humidity').textContent = data.humidity;
+          document.getElementById('humidity-time').textContent = data.timestamp || 'unknown';
+        })
+        .catch(error => {
+          console.error('Error fetching humidity:', error);
+          document.getElementById('humidity').textContent = 'Error';
+          document.getElementById('humidity-time').textContent = '--';
+        });
     }
 
     function fetchAirQuality() {
-        fetch('/api/air-quality')
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('air-quality').textContent = data.iaq;
-                document.getElementById('air-quality-raw').textContent = data.raw;
-                document.getElementById('air-quality-temp').textContent = data.temperature;
-                document.getElementById('air-quality-humidity').textContent = data.humidity;
-                document.getElementById('air-quality-status').textContent = data.warming ? 'Warming up' : 'Stable';
-                document.getElementById('air-quality-time').textContent = data.timestamp || 'unknown';
-            })
-            .catch(error => {
-                console.error('Error fetching air quality:', error);
-                document.getElementById('air-quality').textContent = 'Error';
-                document.getElementById('air-quality-raw').textContent = '--';
-                document.getElementById('air-quality-temp').textContent = '--';
-                document.getElementById('air-quality-humidity').textContent = '--';
-                document.getElementById('air-quality-status').textContent = '--';
-                document.getElementById('air-quality-time').textContent = '--';
-            });
+      fetch('/api/air-quality')
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById('air-quality').textContent = data.iaq;
+          document.getElementById('air-quality-raw').textContent = data.raw;
+          document.getElementById('air-quality-temp').textContent = data.temperature;
+          document.getElementById('air-quality-humidity').textContent = data.humidity;
+          document.getElementById('air-quality-status').textContent = data.warming ? 'Warming up' : 'Stable';
+          document.getElementById('air-quality-time').textContent = data.timestamp || 'unknown';
+        })
+        .catch(error => {
+          console.error('Error fetching air quality:', error);
+          document.getElementById('air-quality').textContent = 'Error';
+          document.getElementById('air-quality-raw').textContent = '--';
+          document.getElementById('air-quality-temp').textContent = '--';
+          document.getElementById('air-quality-humidity').textContent = '--';
+          document.getElementById('air-quality-status').textContent = '--';
+          document.getElementById('air-quality-time').textContent = '--';
+        });
     }
 
-    // Fetch temperature, humidity, and air quality every 5 seconds
     setInterval(fetchTemperature, 5000);
     setInterval(fetchHumidity, 5000);
     setInterval(fetchAirQuality, 5000);
-    // Initial fetch
     fetchTemperature();
     fetchHumidity();
     fetchAirQuality();
-  </script>
-  
 
-  <hr>
-  <h4>Get Temperature Graph by Date</h4>
-
-  <label for="dateInput">Select Date:</label>
-  <input type="date" id="dateInput" style="padding: 8px; font-size: 16px; margin-top: 5px;">
-
-  <button onclick="fetchTemperatureGraph()">Get Graph</button>
-
-  <br><br>
-
-  <img id="tempGraphImage" 
-       alt="Temperature Graph will appear here" 
-       style="max-width: 600px; display: none; border: 1px solid #ccc; padding: 10px;">
-
-  <hr>
-  <h4>Get Air Quality Graph by Date</h4>
-
-  <label for="airQualityDateInput">Select Date:</label>
-  <input type="date" id="airQualityDateInput" style="padding: 8px; font-size: 16px; margin-top: 5px;">
-
-  <button onclick="fetchAirQualityGraph()">Get Air Quality Graph</button>
-
-  <br><br>
-
-  <img id="airQualityGraphImage" 
-       alt="Air Quality Graph will appear here" 
-       style="max-width: 600px; display: none; border: 1px solid #ccc; padding: 10px;">
-
-  <hr>
-  <h4>Get Raw Gas Value Graph by Date</h4>
-
-  <label for="gasValueDateInput">Select Date:</label>
-  <input type="date" id="gasValueDateInput" style="padding: 8px; font-size: 16px; margin-top: 5px;">
-
-  <button onclick="fetchGasValueGraph()">Get Gas Value Graph</button>
-
-  <br><br>
-
-  <img id="gasValueGraphImage" 
-       alt="Gas Value Graph will appear here" 
-       style="max-width: 600px; display: none; border: 1px solid #ccc; padding: 10px;">
-
-  <hr>
-  <h4>Get Humidity Graph by Date</h4>
-
-  <label for="humidityDateInput">Select Date:</label>
-  <input type="date" id="humidityDateInput" style="padding: 8px; font-size: 16px; margin-top: 5px;">
-
-  <button onclick="fetchHumidityGraph()">Get Humidity Graph</button>
-
-  <br><br>
-
-  <img id="humidityGraphImage" 
-       alt="Humidity Graph will appear here" 
-       style="max-width: 600px; display: none; border: 1px solid #ccc; padding: 10px;">
-
-  <script>
     function fetchTemperatureGraph() {
-        const dateValue = document.getElementById("dateInput").value;
-
-        if (!dateValue) {
-            alert("Please select a date");
-            return;
-        }
-
-        const timestamp = Math.floor(new Date(dateValue + "T00:00:00").getTime() / 1000
-        );
-        console.log('The timestamp %s is ', timestamp);
-
-        fetch(`/temperature-by-date?timestamp=${timestamp}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.graph) {
-                    const img = document.getElementById("tempGraphImage");
-                    img.src = "data:image/png;base64," + data.graph;
-                    img.style.display = "block";
-                } else {
-                    alert(data.message || "No data found");
-                }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                alert("Failed to fetch data");
-            });
+      const dateValue = document.getElementById('dateInput').value;
+      if (!dateValue) {
+        alert('Please select a date');
+        return;
+      }
+      const timestamp = Math.floor(new Date(dateValue + 'T00:00:00').getTime() / 1000);
+      fetch(`/temperature-by-date?timestamp=${timestamp}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.graph) {
+            const img = document.getElementById('tempGraphImage');
+            img.src = 'data:image/png;base64,' + data.graph;
+            img.style.display = 'block';
+          } else {
+            alert(data.message || 'No data found');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Failed to fetch data');
+        });
     }
 
     function fetchAirQualityGraph() {
-        const dateValue = document.getElementById("airQualityDateInput").value;
-
-        if (!dateValue) {
-            alert("Please select a date");
-            return;
-        }
-
-        const timestamp = Math.floor(new Date(dateValue + "T00:00:00").getTime() / 1000);
-
-        fetch(`/air-quality-by-date?timestamp=${timestamp}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.graph) {
-                    const img = document.getElementById("airQualityGraphImage");
-                    img.src = "data:image/png;base64," + data.graph;
-                    img.style.display = "block";
-                } else {
-                    alert(data.message || "No data found");
-                }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                alert("Failed to fetch data");
-            });
+      const dateValue = document.getElementById('airQualityDateInput').value;
+      if (!dateValue) {
+        alert('Please select a date');
+        return;
+      }
+      const timestamp = Math.floor(new Date(dateValue + 'T00:00:00').getTime() / 1000);
+      fetch(`/air-quality-by-date?timestamp=${timestamp}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.graph) {
+            const img = document.getElementById('airQualityGraphImage');
+            img.src = 'data:image/png;base64,' + data.graph;
+            img.style.display = 'block';
+          } else {
+            alert(data.message || 'No data found');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Failed to fetch data');
+        });
     }
 
     function fetchGasValueGraph() {
-        const dateValue = document.getElementById("gasValueDateInput").value;
-
-        if (!dateValue) {
-            alert("Please select a date");
-            return;
-        }
-
-        const timestamp = Math.floor(new Date(dateValue + "T00:00:00").getTime() / 1000);
-
-        fetch(`/gas-value-by-date?timestamp=${timestamp}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.graph) {
-                    const img = document.getElementById("gasValueGraphImage");
-                    img.src = "data:image/png;base64," + data.graph;
-                    img.style.display = "block";
-                } else {
-                    alert(data.message || "No data found");
-                }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                alert("Failed to fetch data");
-            });
+      const dateValue = document.getElementById('gasValueDateInput').value;
+      if (!dateValue) {
+        alert('Please select a date');
+        return;
+      }
+      const timestamp = Math.floor(new Date(dateValue + 'T00:00:00').getTime() / 1000);
+      fetch(`/gas-value-by-date?timestamp=${timestamp}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.graph) {
+            const img = document.getElementById('gasValueGraphImage');
+            img.src = 'data:image/png;base64,' + data.graph;
+            img.style.display = 'block';
+          } else {
+            alert(data.message || 'No data found');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Failed to fetch data');
+        });
     }
 
     function fetchHumidityGraph() {
-        const dateValue = document.getElementById("humidityDateInput").value;
-
-        if (!dateValue) {
-            alert("Please select a date");
-            return;
-        }
-
-        const timestamp = Math.floor(new Date(dateValue + "T00:00:00").getTime() / 1000);
-
-        fetch(`/humidity-by-date?timestamp=${timestamp}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.graph) {
-                    const img = document.getElementById("humidityGraphImage");
-                    img.src = "data:image/png;base64," + data.graph;
-                    img.style.display = "block";
-                } else {
-                    alert(data.message || "No data found");
-                }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                alert("Failed to fetch data");
-            });
+      const dateValue = document.getElementById('humidityDateInput').value;
+      if (!dateValue) {
+        alert('Please select a date');
+        return;
+      }
+      const timestamp = Math.floor(new Date(dateValue + 'T00:00:00').getTime() / 1000);
+      fetch(`/humidity-by-date?timestamp=${timestamp}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.graph) {
+            const img = document.getElementById('humidityGraphImage');
+            img.src = 'data:image/png;base64,' + data.graph;
+            img.style.display = 'block';
+          } else {
+            alert(data.message || 'No data found');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Failed to fetch data');
+        });
     }
   </script>
 {% endblock content %}

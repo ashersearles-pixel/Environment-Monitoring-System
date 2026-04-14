@@ -2,8 +2,12 @@
 
 {% block header %}
   <h2>{% block title %}About{% endblock title %}</h2>
+  <p class="small-note">A simple Raspberry Pi environmental monitoring interface with temperature, humidity, and air quality readings.</p>
 {% endblock header %}
 
 {% block content %}
-  <p>This is a raspberry pi-based environment monitoring application.</p>
+  <div class="status-card">
+    <p>This project collects sensor data and displays it in real time. Use the home page to view current readings and daily graphs.</p>
+    <p>It is built for a lightweight display and easy monitoring of indoor conditions.</p>
+  </div>
 {% endblock content %}
