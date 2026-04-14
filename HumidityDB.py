@@ -29,6 +29,25 @@ class HumidityDB:
         )
         self.conn.commit()
 
+    def get_humidity_by_date_from_timestamp(self, timestamp):
+        if isinstance(timestamp, str) and timestamp.isdigit():
+            timestamp = int(timestamp)
+
+        if isinstance(timestamp, (int, float)):
+            date_str = datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d")
+        else:
+            try:
+                date_str = datetime.strptime(timestamp, "%Y-%m-%d").strftime("%Y-%m-%d")
+            except ValueError as e:
+                raise ValueError("Invalid timestamp") from e
+
+        like_pattern = f"{date_str}%"
+        self.cursor.execute(
+            "SELECT humidity, timestamp FROM humidity_log WHERE timestamp LIKE ? ORDER BY timestamp",
+            (like_pattern,)
+        )
+        rows = self.cursor.fetchall()
+        return date_str, rows
 
     def close(self):
         self.conn.close()

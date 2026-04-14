@@ -34,6 +34,18 @@ T0_OUT_H = 0x3D
 T1_OUT_L = 0x3E
 T1_OUT_H = 0x3F
 
+# Humidity output registers
+HUMIDITY_OUT_L = 0x28
+HUMIDITY_OUT_H = 0x29
+
+# Humidity calibration registers
+H0_rH_X2 = 0x30
+H1_rH_X2 = 0x31
+H0_T0_OUT_L = 0x36
+H0_T0_OUT_H = 0x37
+H1_T0_OUT_L = 0x3A
+H1_T0_OUT_H = 0x3B
+
 # Initialize I2C bus
 bus = smbus.SMBus(1)
 
@@ -84,10 +96,32 @@ def read_temperature():
     temperature_value = round(temperature_value, 2)
     return Temperature(temperature_value, timestamp)
 
+
+def read_humidity():
+    init_sensor()
+
+    H0_rH = read_register(H0_rH_X2) / 2.0
+    H1_rH = read_register(H1_rH_X2) / 2.0
+
+    H0_T0_out = read_signed_16(H0_T0_OUT_L, H0_T0_OUT_H)
+    H1_T0_out = read_signed_16(H1_T0_OUT_L, H1_T0_OUT_H)
+    humidity_out = read_signed_16(HUMIDITY_OUT_L, HUMIDITY_OUT_H)
+
+    humidity = H0_rH + (humidity_out - H0_T0_out) * (H1_rH - H0_rH) / (H1_T0_out - H0_T0_out)
+
+    if humidity < 0:
+        humidity = 0
+    elif humidity > 100:
+        humidity = 100
+
+    return round(humidity, 2)
+
+
 # Test the sensor
 if __name__ == "__main__":
     while True:
         temp = read_temperature()
-        # insert_temperature(temp)
+        humidity = read_humidity()
         print(f"Temperature: {temp.get_value()}°C")
+        print(f"Humidity: {humidity}%")
         time.sleep(1)
