@@ -29,6 +29,27 @@ class TemperatureDB:
         )
         self.conn.commit()
 
+    def get_temperatures_by_date_from_timestamp(self, timestamp):
+        # Accept either an epoch integer or a string timestamp.
+        if isinstance(timestamp, str) and timestamp.isdigit():
+            timestamp = int(timestamp)
+
+        if isinstance(timestamp, (int, float)):
+            date_str = datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d")
+        else:
+            # Allow ISO date strings as fallback
+            try:
+                date_str = datetime.strptime(timestamp, "%Y-%m-%d").strftime("%Y-%m-%d")
+            except ValueError as e:
+                raise ValueError("Invalid timestamp") from e
+
+        like_pattern = f"{date_str}%"
+        self.cursor.execute(
+            "SELECT temperature, timestamp FROM temperature_log WHERE timestamp LIKE ? ORDER BY timestamp",
+            (like_pattern,)
+        )
+        rows = self.cursor.fetchall()
+        return date_str, rows
 
     def close(self):
         self.conn.close()

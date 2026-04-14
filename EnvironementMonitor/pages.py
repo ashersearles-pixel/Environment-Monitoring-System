@@ -1,8 +1,8 @@
 from flask import Blueprint, render_template, request, jsonify
-from .Sensor.TemperatureDB import TemperatureDB
-from .temp_reading import read_temperature, Temperature
-from .humidity_reading import read_humidity, Humidity
-from .HumidityDB import HumidityDB
+from TemperatureDB import TemperatureDB
+from temp_reading import read_temperature, Temperature
+from humidity_reading import read_humidity
+from HumidityDB import HumidityDB
 import matplotlib.dates as mdates
 from datetime import datetime
 import matplotlib.pyplot as plt
@@ -28,7 +28,8 @@ def get_temperature():
 
     return jsonify({
         "temperature": temperature.get_value(),
-        "unit": "°C"
+        "unit": "°C",
+        "timestamp": temperature.get_timestamp()
     })
 
 @bp.route('/api/humidity', methods=['GET'])

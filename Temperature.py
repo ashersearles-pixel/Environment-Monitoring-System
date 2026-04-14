@@ -6,6 +6,9 @@ class Temperature:
 
     def get_temperature(self):
         return self.value
+
+    def get_value(self):
+        return self.value
     
     def get_timestamp(self):
         return self.timestamp

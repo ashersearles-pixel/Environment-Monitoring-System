@@ -2,7 +2,7 @@ import time
 
 from datetime import datetime
 
-from .Humidity import Humidity
+from Humidity import Humidity
 
 Humidity = Humidity()
 
