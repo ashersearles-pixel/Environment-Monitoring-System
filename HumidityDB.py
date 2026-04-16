@@ -49,6 +49,11 @@ class HumidityDB:
         rows = self.cursor.fetchall()
         return date_str, rows
 
+    def get_all_humidities(self):
+        self.cursor.execute("SELECT humidity FROM humidity_log")
+        rows = self.cursor.fetchall()
+        return [row[0] for row in rows]
+
     def close(self):
         self.conn.close()
 

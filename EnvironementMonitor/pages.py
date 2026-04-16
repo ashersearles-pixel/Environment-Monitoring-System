@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, current_app
 from TemperatureDB import TemperatureDB
 from temp_reading import read_temperature, Temperature
 from humidity_reading import read_humidity
@@ -24,9 +24,14 @@ def about():
 @bp.route('/api/temperature', methods=['GET'])
 def get_temperature():
     temperature = read_temperature()
+    if temperature.get_value() is None:
+        return jsonify({"error": "Failed to read temperature"}), 500
+    
     temperature_db = TemperatureDB()
     temperature_db.insert_temperature(temperature)
     temperature_db.close()
+
+    current_app.temp_tree.insert(temperature.get_value())
 
     return jsonify({
         "temperature": temperature.get_value(),
@@ -37,9 +42,14 @@ def get_temperature():
 @bp.route('/api/humidity', methods=['GET'])
 def get_humidity():
     humidity = read_humidity()
+    if humidity.get_value() is None:
+        return jsonify({"error": "Failed to read humidity"}), 500
+    
     humidity_db = HumidityDB()
     humidity_db.insert_humidity(humidity)
     humidity_db.close()
+
+    current_app.humidity_tree.insert(humidity.get_value())
 
     return jsonify({
         "humidity": humidity.get_value(),
@@ -51,9 +61,15 @@ def get_humidity():
 @bp.route('/api/air-quality', methods=['GET'])
 def get_air_quality():
     air_quality = read_air_quality()
+    if air_quality.get_iaq() is None:
+        return jsonify({"error": "Failed to read air quality"}), 500
+    
     air_quality_db = AirQualityDB()
     air_quality_db.insert_air_quality(air_quality)
     air_quality_db.close()
+    
+    current_app.air_quality_tree.insert(air_quality.get_iaq())
+    
     return jsonify({
         "iaq": air_quality.get_iaq(),
         "raw": air_quality.get_raw(),
@@ -278,3 +294,72 @@ def temperature_by_date():
         "date": date_str,
         "graph": image_base64
     })
+
+@bp.route('/api/max/temperature', methods=['GET'])
+def get_max_temperature():
+    from BinaryTree import BinaryTree
+    date_str = request.args.get('date')
+    if date_str:
+        try:
+            date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+            timestamp = date_obj.timestamp()
+            temp_db = TemperatureDB()
+            _, rows = temp_db.get_temperatures_by_date_from_timestamp(timestamp)
+            temp_db.close()
+            if rows:
+                temp_tree = BinaryTree()
+                temp_tree.load_from_list([row[0] for row in rows])
+                max_val = temp_tree.get_max()
+            else:
+                max_val = None
+        except ValueError:
+            return jsonify({"error": "Invalid date format"}), 400
+    else:
+        max_val = current_app.temp_tree.get_max()
+    return jsonify({"max_temperature": max_val, "unit": "°C"})
+
+@bp.route('/api/max/humidity', methods=['GET'])
+def get_max_humidity():
+    from BinaryTree import BinaryTree
+    date_str = request.args.get('date')
+    if date_str:
+        try:
+            date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+            timestamp = date_obj.timestamp()
+            humidity_db = HumidityDB()
+            _, rows = humidity_db.get_humidity_by_date_from_timestamp(timestamp)
+            humidity_db.close()
+            if rows:
+                humidity_tree = BinaryTree()
+                humidity_tree.load_from_list([row[0] for row in rows])
+                max_val = humidity_tree.get_max()
+            else:
+                max_val = None
+        except ValueError:
+            return jsonify({"error": "Invalid date format"}), 400
+    else:
+        max_val = current_app.humidity_tree.get_max()
+    return jsonify({"max_humidity": max_val, "unit": "%"})
+
+@bp.route('/api/max/air-quality', methods=['GET'])
+def get_max_air_quality():
+    from BinaryTree import BinaryTree
+    date_str = request.args.get('date')
+    if date_str:
+        try:
+            date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+            timestamp = date_obj.timestamp()
+            air_db = AirQualityDB()
+            _, rows = air_db.get_air_quality_by_date_from_timestamp(timestamp)
+            air_db.close()
+            if rows:
+                air_tree = BinaryTree()
+                air_tree.load_from_list([row[0] for row in rows])
+                max_val = air_tree.get_max()
+            else:
+                max_val = None
+        except ValueError:
+            return jsonify({"error": "Invalid date format"}), 400
+    else:
+        max_val = current_app.air_quality_tree.get_max()
+    return jsonify({"max_air_quality": max_val, "unit": "IAQ"})

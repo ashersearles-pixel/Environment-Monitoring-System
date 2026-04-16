@@ -30,6 +30,33 @@
     </article>
   </div>
 
+  <section class="max-values">
+    <header>
+      <h3 class="section-title">Maximum Recorded Values</h3>
+      <div class="form-row">
+        <label for="maxDateInput">Select Date for Max Values</label>
+        <input type="date" id="maxDateInput">
+        <button class="button" onclick="fetchMaxForDate()">Update Max</button>
+      </div>
+    </header>
+    <div class="card-grid">
+      <article class="status-card">
+        <h4>Max Temperature</h4>
+        <p><strong><span id="max-temperature">--</span> °C</strong></p>
+      </article>
+
+      <article class="status-card">
+        <h4>Max Humidity</h4>
+        <p><strong><span id="max-humidity">--</span> %</strong></p>
+      </article>
+
+      <article class="status-card">
+        <h4>Max Air Quality Index</h4>
+        <p><strong><span id="max-air-quality">--</span></strong></p>
+      </article>
+    </div>
+  </section>
+
   <section class="form-block">
     <header>
       <h3 class="section-title">Daily graphs</h3>
@@ -129,6 +156,66 @@
     fetchTemperature();
     fetchHumidity();
     fetchAirQuality();
+
+    function fetchMaxTemperature(date = null) {
+      let url = '/api/max/temperature';
+      if (date) url += '?date=' + date;
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById('max-temperature').textContent = data.max_temperature !== null ? data.max_temperature : 'No data';
+        })
+        .catch(error => {
+          console.error('Error fetching max temperature:', error);
+          document.getElementById('max-temperature').textContent = 'Error';
+        });
+    }
+
+    function fetchMaxHumidity(date = null) {
+      let url = '/api/max/humidity';
+      if (date) url += '?date=' + date;
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById('max-humidity').textContent = data.max_humidity !== null ? data.max_humidity : 'No data';
+        })
+        .catch(error => {
+          console.error('Error fetching max humidity:', error);
+          document.getElementById('max-humidity').textContent = 'Error';
+        });
+    }
+
+    function fetchMaxAirQuality(date = null) {
+      let url = '/api/max/air-quality';
+      if (date) url += '?date=' + date;
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById('max-air-quality').textContent = data.max_air_quality !== null ? data.max_air_quality : 'No data';
+        })
+        .catch(error => {
+          console.error('Error fetching max air quality:', error);
+          document.getElementById('max-air-quality').textContent = 'Error';
+        });
+    }
+
+    function fetchMaxForDate() {
+      const dateValue = document.getElementById('maxDateInput').value;
+      if (!dateValue) {
+        alert('Please select a date');
+        return;
+      }
+      fetchMaxTemperature(dateValue);
+      fetchMaxHumidity(dateValue);
+      fetchMaxAirQuality(dateValue);
+    }
+
+    setInterval(fetchMaxTemperature, 30000);
+    setInterval(fetchMaxHumidity, 30000);
+    setInterval(fetchMaxAirQuality, 30000);
+    fetchMaxTemperature();
+    fetchMaxHumidity();
+    fetchMaxAirQuality();
 
     function fetchTemperatureGraph() {
       const dateValue = document.getElementById('dateInput').value;

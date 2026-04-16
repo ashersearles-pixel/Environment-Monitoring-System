@@ -72,6 +72,11 @@ class AirQualityDB:
         rows = self.cursor.fetchall()
         return date_str, rows
 
+    def get_all_iaq(self):
+        self.cursor.execute("SELECT iaq FROM air_quality_log")
+        rows = self.cursor.fetchall()
+        return [row[0] for row in rows]
+
     def close(self):
         self.conn.close()
 

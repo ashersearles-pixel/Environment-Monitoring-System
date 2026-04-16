@@ -51,6 +51,11 @@ class TemperatureDB:
         rows = self.cursor.fetchall()
         return date_str, rows
 
+    def get_all_temperatures(self):
+        self.cursor.execute("SELECT temperature FROM temperature_log")
+        rows = self.cursor.fetchall()
+        return [row[0] for row in rows]
+
     def close(self):
         self.conn.close()
 
